@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c8102e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="업무">
+<meta name="robots" content="noindex, nofollow">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>Work Manager</title>
+<style>
+:root{--accent:#c8102e;--accent-lt:#fdecef;--bg:#f4f5f7;--card:#fff;--text:#1f2329;--sub:#5b6370;--dim:#8a919c;--muted:#b3b8c0;
+  --line:#e6e8eb;--green:#1f9d55;--orange:#e67e22;--red:#d93025}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;font-size:15px}
+.hidden{display:none!important}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 10px) 16px 0}
+.top{display:flex;align-items:center;gap:8px}
+.top h1{font-size:17px;margin:0;flex:1}
+.top h1 small{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-top:2px}
+.icon-btn{border:1px solid var(--line);background:#fff;border-radius:10px;width:38px;height:38px;font-size:17px;color:var(--sub)}
+.add{display:flex;gap:6px;margin:10px 0}
+.add input{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;outline:none;background:#fafbfc}
+.add input:focus{border-color:var(--accent);background:#fff}
+.add button{border:0;background:var(--accent);color:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:700}
+.hint{font-size:11px;color:var(--dim);margin:-4px 2px 8px}
+.tabs{display:flex}
+.tabs button{flex:1;border:0;background:none;padding:10px 0 11px;font-size:14px;color:var(--sub);border-bottom:2.5px solid transparent}
+.tabs button.on{color:var(--accent);font-weight:700;border-color:var(--accent)}
+main{padding:12px 14px calc(env(safe-area-inset-bottom) + 30px)}
+.sec{margin:6px 2px 8px;font-size:13px;font-weight:700;color:var(--sub);display:flex;justify-content:space-between}
+.sec.today{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.row{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .t{font-size:13px;font-weight:700;color:var(--sub);min-width:44px;padding-top:1px}
+.row .x{flex:1;line-height:1.4;word-break:break-all}
+.row .x small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+.chip{font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;background:#f1f2f4;color:var(--sub)}
+.chip.red{background:#fdecea;color:var(--red)}.chip.orange{background:#fdf2e6;color:var(--orange)}
+.chip.green{background:#e8f6ee;color:var(--green)}
+.empty{padding:16px;color:var(--muted);text-align:center;font-size:13px}
+.plan{padding:14px}
+.plan h3{margin:0 0 2px;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.plan .meta{font-size:12px;color:var(--dim);margin-bottom:10px}
+.bar{position:relative;height:9px;background:#eef0f2;border-radius:9px}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px}
+.bar b{position:absolute;top:-4px;width:2px;height:17px;background:var(--text);opacity:.55}
+.plan .foot{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:8px}
+.memo{padding:12px 14px;border-top:1px solid var(--line);white-space:pre-wrap;line-height:1.5;font-size:14px}
+.memo:first-child{border-top:0}
+.pending{background:#fff8e6;border:1px solid #f6e3b4;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px}
+.pending b{color:#a8660b}
+.pending div{margin-top:4px;color:var(--sub)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);background:#2b2f36;color:#fff;
+  padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:90%;text-align:center}
+/* 로그인 */
+#login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px}
+#login .box{background:#fff;border-radius:18px;padding:26px 22px;border:1px solid var(--line)}
+#login h2{margin:0 0 4px;font-size:20px}
+#login p{margin:0 0 18px;color:var(--dim);font-size:13px}
+#login label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:10px 0 4px}
+#login input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:16px;outline:none}
+#login input:focus{border-color:var(--accent)}
+#login button{width:100%;margin-top:18px;border:0;background:var(--accent);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:700}
+#lmsg{color:var(--red);font-size:13px;min-height:18px;margin-top:10px}
+.stale{background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:10px;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<section id="login" class="hidden">
+  <div class="box">
+    <h2>📅 Work Manager</h2>
+    <p>PC 프로그램(☁ 동기화)과 같은 이메일·비밀번호로 로그인</p>
+    <label for="lemail">이메일</label>
+    <input id="lemail" type="email" autocomplete="username" value="owner@work-manager.local">
+    <label for="lpw">비밀번호</label>
+    <input id="lpw" type="password" autocomplete="current-password">
+    <button id="lbtn">로그인</button>
+    <div id="lmsg"></div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <header>
+    <div class="top">
+      <h1>📅 Work Manager<small id="stamp">불러오는 중…</small></h1>
+      <button class="icon-btn" id="refresh" aria-label="새로고침">↻</button>
+      <button class="icon-btn" id="logout" aria-label="로그아웃">⎋</button>
+    </div>
+    <form class="add" id="addf">
+      <input id="addin" placeholder="내일 2시 회의 · 금요일까지 보고서" autocomplete="off" enterkeyhint="send">
+      <button type="submit">적기</button>
+    </form>
+    <div class="hint">PC가 켜져 있으면 15분 안에 일정·할 일로 정리돼요</div>
+    <nav class="tabs" id="tabs">
+      <button data-v="agenda" class="on">일정</button>
+      <button data-v="tasks">할 일</button>
+      <button data-v="plans">계획</button>
+      <button data-v="memos">메모</button>
+    </nav>
+  </header>
+  <main id="main"></main>
+</section>
+
+<script>
+"use strict";
+const SB = "https://rohkmakucihoccwyzkoa.supabase.co";
+const KEY = "sb_publishable_MwI6Uxd42eY50Gq9F01zAg_hiD2MQ_h";
+const BUCKET = "workmanager";
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+const $ = (id) => document.getElementById(id);
+
+// ── 저장 (막힌 브라우저에서도 동작하도록) ──
+const mem = {};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] || null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { delete mem[k]; } },
+};
+
+let token = null, uid = store.get("wm_uid"), data = null, view = "agenda";
+
+// ── 인증 ──
+async function authReq(grant, body) {
+  const r = await fetch(`${SB}/auth/v1/token?grant_type=${grant}`, {
+    method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(grant === "password" ? "이메일 또는 비밀번호가 틀렸어요" : "로그인이 만료됐어요");
+  token = j.access_token; uid = j.user.id;
+  store.set("wm_refresh", j.refresh_token); store.set("wm_uid", uid);
+}
+async function ensure() {
+  if (token) return;
+  const rt = store.get("wm_refresh");
+  if (!rt) throw new Error("login");
+  await authReq("refresh_token", { refresh_token: rt });
+}
+async function api(method, path, body, retry = true) {
+  await ensure();
+  const h = { apikey: KEY, Authorization: `Bearer ${token}` };
+  if (body !== undefined) h["Content-Type"] = "application/json";
+  const r = await fetch(SB + path, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store" });
+  if (r.status === 401 && retry) { token = null; return api(method, path, body, false); }
+  return r;
+}
+
+// ── 데이터 ──
+async function load() {
+  $("stamp").textContent = "불러오는 중…";
+  try {
+    const r = await api("GET", `/storage/v1/object/authenticated/${BUCKET}/${uid}/mobile.json`);
+    if (r.ok) data = await r.json();
+    else if (r.status === 400 || r.status === 404) data = null;
+    else throw new Error("오류 " + r.status);
+    try { store.set("wm_cache", JSON.stringify(data)); } catch (e) {}
+    await loadPending();
+    render();
+  } catch (e) {
+    if (e.message === "login") return showLogin();
+    const c = store.get("wm_cache");
+    if (c && !data) { try { data = JSON.parse(c); } catch (x) {} }
+    render();
+    toast("인터넷 연결을 확인하세요 (저장된 화면 표시)");
+  }
+}
+let pending = [];
+async function loadPending() {
+  try {
+    const r = await api("POST", `/storage/v1/object/list/${BUCKET}`, { prefix: `${uid}/inbox`, limit: 100 });
+    const names = r.ok ? (await r.json()).map((o) => o.name).filter((n) => n && n.endsWith(".json")) : [];
+    const sent = JSON.parse(store.get("wm_sent") || "{}");
+    pending = names.sort().map((n) => sent[n] || "(내용 확인 중)");
+    // 처리된 것은 기록에서 지움
+    const keep = {}; names.forEach((n) => { if (sent[n]) keep[n] = sent[n]; });
+    store.set("wm_sent", JSON.stringify(keep));
+  } catch (e) { pending = []; }
+}
+async function addLine(text) {
+  const now = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  const ts = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}T${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+  const name = ts.replace(/[-:T]/g, "") + "_" + Math.random().toString(36).slice(2, 8) + ".json";
+  const r = await api("POST", `/storage/v1/object/${BUCKET}/${uid}/inbox/${name}`, { x: text, ts });
+  if (!r.ok) throw new Error("전송 실패 " + r.status);
+  const sent = JSON.parse(store.get("wm_sent") || "{}"); sent[name] = text; store.set("wm_sent", JSON.stringify(sent));
+  pending.push(text);
+}
+
+// ── 날짜 도우미 ──
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const todayS = () => ymd(new Date());
+const diff = (s) => Math.round((parse(s) - parse(todayS())) / 86400000);
+const md = (s) => { const d = parse(s); return `${d.getMonth() + 1}/${d.getDate()} (${WD[d.getDay()]})`; };
+function dueChip(s) {
+  if (!s) return ["언젠가", ""];
+  const n = diff(s);
+  if (n < 0) return [`${-n}일 지남`, "red"];
+  if (n === 0) return ["오늘", "red"];
+  if (n === 1) return ["내일", "orange"];
+  if (n <= 7) return [`D-${n}`, "orange"];
+  return [md(s), ""];
+}
+function dayTitle(s) {
+  const n = diff(s);
+  return (n === 0 ? "오늘 · " : n === 1 ? "내일 · " : n === 2 ? "모레 · " : "") + md(s);
+}
+
+// ── 화면 ──
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function chip(text, cls) { return el("span", "chip " + (cls || ""), text); }
+function row(t, x, sub, chipEl) {
+  const r = el("div", "row");
+  r.appendChild(el("div", "t", t));
+  const xe = el("div", "x", x); if (sub) xe.appendChild(el("small", null, sub)); r.appendChild(xe);
+  if (chipEl) r.appendChild(chipEl);
+  return r;
+}
+function card(children) { const c = el("div", "card"); children.forEach((ch) => c.appendChild(ch)); return c; }
+
+function render() {
+  const m = $("main"); m.innerHTML = "";
+  if (pending.length) {
+    const p = el("div", "pending"); p.appendChild(el("b", null, `⏳ PC로 보낼 대기 중 ${pending.length}건`));
+    pending.slice(0, 5).forEach((t) => p.appendChild(el("div", null, "· " + t)));
+    m.appendChild(p);
+  }
+  if (!data) {
+    $("stamp").textContent = "아직 PC에서 올린 데이터가 없어요";
+    m.appendChild(card([el("div", "empty", "PC 프로그램에서 ☁ 동기화 → [⬆ 지금 올리기]를 한 번 눌러 주세요")]));
+    return;
+  }
+  const ts = new Date(data.ts);
+  const ago = Math.round((Date.now() - ts) / 3600000);
+  $("stamp").textContent = `${data.dev || "PC"} · ${ts.getMonth() + 1}/${ts.getDate()} ${pad(ts.getHours())}:${pad(ts.getMinutes())} 기준`;
+  if (ago >= 48) m.appendChild(el("div", "stale", `⚠ ${Math.floor(ago / 24)}일 전 정보예요 · PC를 켜면 새로 올라옵니다`));
+  ({ agenda, tasks, plans, memos })[view](m);
+}
+
+function agenda(m) {
+  const t = todayS();
+  const days = {};
+  const add = (d, item) => { (days[d] = days[d] || []).push(item); };
+  (data.ev || []).forEach((e) => { if (e.d >= t) add(e.d, { kind: "ev", ...e }); });
+  const over = (data.tasks || []).filter((k) => k.d && k.d < t);
+  (data.tasks || []).forEach((k) => { if (k.d && k.d >= t && diff(k.d) <= 14) add(k.d, { kind: "task", ...k }); });
+  if (over.length) {
+    m.appendChild(el("div", "sec today", `⚠ 기한 지난 할 일 ${over.length}`));
+    m.appendChild(card(over.map((k) => row("☐", k.x, null, chip(dueChip(k.d)[0], "red")))));
+  }
+  const keys = Object.keys(days).sort();
+  if (!keys.includes(t)) keys.unshift(t);
+  keys.forEach((d) => {
+    const items = (days[d] || []).sort((a, b) => (a.kind === b.kind ? (a.t || "").localeCompare(b.t || "") : a.kind === "ev" ? -1 : 1));
+    m.appendChild(el("div", "sec" + (d === t ? " today" : ""), dayTitle(d)));
+    if (!items.length) { m.appendChild(card([el("div", "empty", "일정 없음")])); return; }
+    m.appendChild(card(items.map((it) => it.kind === "ev"
+      ? row(it.t, it.x, it.r ? "🔁 " + it.r : null, null)
+      : row(it.k ? "▶" : "☐", it.x, it.s === "plan_p" ? "🎯 계획 할 일" : null, chip("마감", "orange")))));
+  });
+}
+
+function tasks(m) {
+  const groups = [["⚠ 지남", (k) => k.d && diff(k.d) < 0], ["오늘", (k) => k.d && diff(k.d) === 0],
+    ["이번 주", (k) => k.d && diff(k.d) > 0 && diff(k.d) <= 7], ["2주 안", (k) => k.d && diff(k.d) > 7], ["언젠가", (k) => !k.d]];
+  let any = false;
+  groups.forEach(([title, f]) => {
+    const list = (data.tasks || []).filter(f);
+    if (!list.length) return;
+    any = true;
+    m.appendChild(el("div", "sec" + (title.startsWith("⚠") ? " today" : ""), `${title}  ${list.length}`));
+    m.appendChild(card(list.map((k) => {
+      const [lab, cls] = dueChip(k.d);
+      const sub = k.s === "plan_p" ? "🎯 계획" : k.s === "mobile" ? "📱 휴대폰에서 적음" : k.s === "memo" ? "📌 메모에서" : null;
+      return row(k.k ? "▶" : "☐", k.x, sub, chip(lab, cls));
+    })));
+  });
+  if (!any) m.appendChild(card([el("div", "empty", "할 일 없음 🎉")]));
+}
+
+function plans(m) {
+  if (!(data.plans || []).length) return m.appendChild(card([el("div", "empty", "진행 중인 계획이 없어요")]));
+  data.plans.forEach((p) => {
+    const c = el("div", "card plan");
+    const n = diff(p.dd);
+    const h = el("h3"); const nm = el("span", null, p.n); nm.style.color = p.c; h.appendChild(nm);
+    h.appendChild(chip(n === 0 ? "D-day" : n > 0 ? `D-${n}` : `D+${-n}`, n <= 7 && n >= 0 ? "red" : ""));
+    c.appendChild(h);
+    c.appendChild(el("div", "meta", `🎯 ${md(p.dd)}`));
+    const bar = el("div", "bar"); const fill = el("i"); fill.style.width = p.pct + "%"; fill.style.background = p.c; bar.appendChild(fill);
+    const mk = el("b"); mk.style.left = `calc(${Math.min(100, p.tp)}% - 1px)`; bar.appendChild(mk);
+    c.appendChild(bar);
+    const f = el("div", "foot");
+    f.appendChild(el("span", null, `완료 ${p.pct}% · 시간 ${p.tp}%`));
+    const v = el("span", null, p.v); v.style.color = p.vc; v.style.fontWeight = "700"; f.appendChild(v);
+    c.appendChild(f);
+    if (p.ph) c.appendChild(el("div", "meta", `지금 단계: ${p.ph} · ~${md(p.pe)}`)).style.margin = "8px 0 0";
+    m.appendChild(c);
+  });
+  m.appendChild(el("div", "hint", "막대 = 완료한 일 비율 · 세로선 = 지난 시간 비율 (막대가 선보다 뒤면 늦는 중)"));
+}
+
+function memos(m) {
+  if (!(data.memos || []).length) return m.appendChild(card([el("div", "empty", "메모 없음")]));
+  m.appendChild(card(data.memos.map((x) => el("div", "memo", (x.pr === "높음" ? "🔴 " : "") + x.x))));
+}
+
+// ── 이벤트 ──
+function toast(t) {
+  const d = el("div", "toast", t); document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2600);
+}
+function showLogin() {
+  $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+  setTimeout(() => $("lpw").focus(), 100);
+}
+function showApp() { $("login").classList.add("hidden"); $("app").classList.remove("hidden"); load(); }
+
+$("lbtn").onclick = async () => {
+  $("lmsg").textContent = "";
+  $("lbtn").disabled = true; $("lbtn").textContent = "로그인 중…";
+  try { await authReq("password", { email: $("lemail").value.trim(), password: $("lpw").value }); $("lpw").value = ""; showApp(); }
+  catch (e) { $("lmsg").textContent = e.message.includes("Failed") ? "인터넷 연결을 확인하세요" : e.message; }
+  $("lbtn").disabled = false; $("lbtn").textContent = "로그인";
+};
+$("lpw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("lbtn").click(); });
+$("logout").onclick = () => {
+  if (!confirm("로그아웃할까요?")) return;
+  store.del("wm_refresh"); store.del("wm_uid"); store.del("wm_cache"); token = null; data = null; showLogin();
+};
+$("refresh").onclick = () => load();
+$("tabs").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  view = b.dataset.v;
+  [...$("tabs").children].forEach((x) => x.classList.toggle("on", x === b));
+  window.scrollTo(0, 0); render();
+};
+$("addf").onsubmit = async (e) => {
+  e.preventDefault();
+  const t = $("addin").value.trim(); if (!t) return;
+  $("addin").disabled = true;
+  try { await addLine(t); $("addin").value = ""; toast("✔ 보냈어요 · PC가 일정/할 일로 정리합니다"); render(); }
+  catch (x) { toast(x.message === "login" ? "다시 로그인해 주세요" : "보내기 실패 · 인터넷 확인"); }
+  $("addin").disabled = false;
+};
+document.addEventListener("visibilitychange", () => { if (!document.hidden && store.get("wm_refresh")) load(); });
+
+if (store.get("wm_refresh")) showApp(); else showLogin();
+</script>
+</body>
+</html>
