@@ -90,7 +90,7 @@ main{padding:12px 12px calc(var(--nav) + env(safe-area-inset-bottom) + 84px)}
 .wk div{text-align:center;font-size:11px;font-weight:700;color:var(--dim)}
 .wk div:first-child{color:var(--red)}.wk div:last-child{color:var(--blue)}
 .gd{display:grid;grid-template-columns:repeat(7,1fr)}
-.c{min-height:74px;padding:4px 2px 3px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0}
+.c{min-height:78px;padding:4px 2px 3px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0}
 .c .n{align-self:center;font-size:12.5px;font-weight:700;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;font-variant-numeric:tabular-nums}
 .c.sun .n,.c.hol .n{color:var(--red)}.c.sat .n{color:var(--blue)}
 .c.out .n,.c.out .ch{opacity:.32}
@@ -103,6 +103,20 @@ main{padding:12px 12px calc(var(--nav) + env(safe-area-inset-bottom) + 84px)}
 .ch.tk{background:#fff1e3;color:var(--orange)}
 .ch.hn{background:none;color:var(--red);padding:0 3px;font-size:9px}
 .ch.more{background:none;color:var(--dim);padding:0 3px;font-size:9.5px}
+.c{position:relative}
+.c.done{background:#f0faf3}
+.pg{position:absolute;top:6px;right:3px;font-size:8.5px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.pg.ok{color:var(--green)}.pg.carry{color:var(--orange)}
+.band{font-size:9.5px;line-height:1.35;color:#fff;font-weight:700;padding:1px 4px;margin:0 -2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}
+.c.sat .band{margin-right:0}.c.sun .band{margin-left:0}
+.band.st{border-top-left-radius:4px;border-bottom-left-radius:4px;margin-left:1px}
+.band.en{border-top-right-radius:4px;border-bottom-right-radius:4px;margin-right:1px}
+.mrow{display:flex;align-items:center;gap:10px;padding:12px 14px 4px;font-size:12.5px;font-weight:700;color:var(--sub)}
+.mrow .pct{font-size:15px;font-weight:800;color:var(--text)}
+.mrow .fire{color:var(--accent)}
+.mbar{flex:1;height:6px;border-radius:6px;background:#eef0f3;overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--green);border-radius:6px}
+.mk{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
 .dayhd{display:flex;align-items:baseline;gap:8px;margin:18px 4px 8px;scroll-margin-top:70px}
 .dayhd b{font-size:17px;font-weight:800;letter-spacing:-.02em}
 .dayhd span{font-size:12px;color:var(--dim);font-weight:600}
@@ -355,10 +369,32 @@ function dayMap() {
   Object.values(map).forEach((v) => v.ev.sort((a, b) => (a.t || "").localeCompare(b.t || "")));
   return map;
 }
+function markMap() {
+  const out = {};
+  (data.marks || []).forEach((m) => {
+    let d = parse(m.s); const e = parse(m.e);
+    while (d <= e) {
+      const k = ymd(d);
+      if (!out[k]) out[k] = { c: m.c, l: m.l, st: k === m.s, en: k === m.e, show: k === m.s || d.getDay() === 0, s: m.s, e: m.e };
+      d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    }
+  });
+  return out;
+}
 function firstLine(t) { return (t || "").split("\n").map((x) => x.replace(/^[-·•\s]+/, "").trim()).find(Boolean) || ""; }
 function cal(m) {
   const map = dayMap(), hol = data.hol || {}, t = todayS();
   const box = el("div", "cal");
+  const ms = data.mstat;
+  if (ms && ms.pct !== null && ms.pct !== undefined && calY === new Date().getFullYear() && calM === new Date().getMonth()) {
+    const r = el("div", "mrow");
+    r.appendChild(el("span", null, "이달 달성"));
+    r.appendChild(el("span", "pct", ms.pct + "%"));
+    const b = el("div", "mbar"); const f = el("i"); f.style.width = ms.pct + "%"; b.appendChild(f); r.appendChild(b);
+    if (ms.streak) r.appendChild(el("span", "fire", `🔥 ${ms.streak}일 연속`));
+    box.appendChild(r);
+  }
+  const marks = markMap();
   const wk = el("div", "wk"); WD.forEach((x) => wk.appendChild(el("div", null, x))); box.appendChild(wk);
   const g = el("div", "gd");
   const first = new Date(calY, calM, 1);
@@ -371,8 +407,21 @@ function cal(m) {
     if (dt.getMonth() !== calM) cls.push("out");
     if (dt.getDay() === 0) cls.push("sun"); if (dt.getDay() === 6) cls.push("sat");
     if (hol[d]) cls.push("hol"); if (d === t) cls.push("today"); if (d === calSel) cls.push("sel");
+    const pg = (data.prog || {})[d];
+    if (pg && pg[1] && pg[0] >= pg[1] && d <= t) cls.push("done");
     const c = el("div", cls.join(" "));
     c.appendChild(el("div", "n", String(dt.getDate())));
+    if (pg && pg[1]) {
+      const ok = pg[0] >= pg[1];
+      if (ok) c.appendChild(el("span", "pg ok", "✔"));
+      else if (d < t && pg[2]) c.appendChild(el("span", "pg carry", "↪" + pg[2]));
+      else if (d >= t) c.appendChild(el("span", "pg", `${pg[0]}/${pg[1]}`));
+    }
+    const mk = marks[d];
+    if (mk) {
+      const b = el("div", "band" + (mk.st ? " st" : "") + (mk.en ? " en" : ""), mk.show ? mk.l : "");
+      b.style.background = mk.c; c.appendChild(b);
+    }
     const chips = [];
     if (hol[d]) chips.push(["hn", hol[d]]);
     info.ev.forEach((e) => chips.push(["al", e.x]));
@@ -398,6 +447,10 @@ function cal(m) {
   hd.appendChild(el("b", null, longDay(calSel)));
   hd.appendChild(el("span", null, rel(calSel)));
   if (hol[calSel]) hd.appendChild(el("span", "hol", hol[calSel]));
+  const smk = marks[calSel];
+  if (smk) { const k = el("span", "mk", smk.l + (smk.s !== smk.e ? ` ${md(smk.s)}~${md(smk.e)}` : "")); k.style.background = smk.c; hd.appendChild(k); }
+  const spg = (data.prog || {})[calSel];
+  if (spg && spg[1]) hd.appendChild(el("span", null, `☑ ${spg[0]}/${spg[1]}` + (spg[2] ? ` · ↪${spg[2]} 넘어감` : "")));
   m.appendChild(hd);
   const items = [];
   info.ev.forEach((e) => items.push(evItem(e)));
